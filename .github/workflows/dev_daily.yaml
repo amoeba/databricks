@@ -55,14 +55,14 @@ jobs:
           git clone --depth 1 https://github.com/adbc-drivers/dev
           python -m venv venv
           source venv/bin/activate
-          pip install dev
+          pip install ./dev
           adbc-gen-workflow generate $(pwd)
 
       - name: Bop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if git status --porcelain; then
+          if if [ -n "$(git status --porcelain)" ]; then
             git config user.name 'github-actions'
             git config user.email 'github-actions@github.com'
 
