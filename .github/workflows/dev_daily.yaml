@@ -60,10 +60,9 @@ jobs:
             PR_TITLE="chore: update generated workflows"
             BRANCH="chore/workflows_$(date +%Y-%m-%d)"
 
-            # Skip if a matching PR is already open
-            PR_COUNT=$(gh pr list --state open --search "$PR_TITLE in:title" --json number --jq 'length')
-            if [ "$PR_COUNT" -gt 0 ]; then
-              echo "PR already exists. Skipping creating a PR."
+            # Skip if branch already exists on remote
+            if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+              echo "Branch $BRANCH already exists on remote. Skipping."
               exit 0
             fi
 
