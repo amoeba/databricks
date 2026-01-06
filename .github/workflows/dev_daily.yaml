@@ -62,7 +62,7 @@ jobs:
 
             # Skip if branch already exists on remote
             if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
-              echo "Branch $BRANCH already exists on remote. Skipping."
+              echo "Branch $BRANCH already exists on remote. Skipping creating a new PR."
               exit 0
             fi
 
