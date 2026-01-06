@@ -48,7 +48,7 @@ jobs:
       - name: Boop
         run: |
           git clone --depth 1 https://github.com/adbc-drivers/dev
-          python adbc_drivers_dev/workflow.py generate $(pwd)
+          python dev/adbc_drivers_dev/workflow.py generate $(pwd)
 
       - name: Bop
         env:
