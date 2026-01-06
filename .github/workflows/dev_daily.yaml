@@ -43,26 +43,33 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 1
-          persist-credentials: true
+          persist-credentials: true # for git operations below
 
-      - name: Boop
+      - name: Re-generate workflows
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install git+https://github.com/adbc-drivers/dev.git
           adbc-gen-workflow generate $(pwd)
 
-      - name: Bop
+      - name: Create PR if there are any changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -n "$(git status --porcelain)" ]; then
+            PR_TITLE="chore: update generated workflows"
+            BRANCH="chore/workflows_$(date +%Y-%m-%d)"
+
+            # Skip if a matching PR is already open
+            PR_COUNT=$(gh pr list --state open --search "$PR_TITLE in:title" --json number --jq 'length')
+            if [ "$PR_COUNT" -gt 0 ]; then
+              echo "PR already exists. Skipping creating a PR."
+              exit 0
+            fi
+
             git config user.name "github-actions"
             git config user.email "github-actions@github.com"
-
-            BRANCH="chore/workflows_$(date +%Y-%m-%d)"
             git checkout -b $BRANCH
-
             git add .
             git commit -m "update generated workflows"
             git push origin $BRANCH
@@ -70,7 +77,7 @@ jobs:
             gh pr create \
               --base main \
               --head $BRANCH \
-              --title "chore: update generated workflows" \
+              --title "$PR_TITLE" \
               --body "TODO" \
               --dry-run
           else
