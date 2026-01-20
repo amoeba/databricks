@@ -34,7 +34,6 @@ jobs:
   sync_workflows:
     name: Sync Workflows
     runs-on: ubuntu-slim
-    if: github.repository_owner == 'adbc-drivers'
 
     permissions:
       contents: write
