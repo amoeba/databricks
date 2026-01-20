@@ -30,6 +30,10 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: write
+  workflows: write
+
 jobs:
   sync_workflows:
     name: Sync Workflows
