@@ -17,8 +17,7 @@
 name: Dev (Daily)
 
 on:
-  schedule:
-    - cron: 14 23 * * *
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.repository }}
@@ -83,6 +82,7 @@ jobs:
               --base main \
               --head "$BRANCH" \
               --title "$PR_TITLE" \
+              --dry-run \
               --body "" || {
                 echo "ERROR: Failed to create pull request"
                 exit 1
