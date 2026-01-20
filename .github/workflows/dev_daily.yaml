@@ -19,8 +19,6 @@ name: Dev (Daily)
 on:
   schedule:
     - cron: 14 23 * * *
-  workflow_dispatch:
-  pull_request:
 
 concurrency:
   group: ${{ github.repository }}
@@ -34,23 +32,30 @@ jobs:
   sync_workflows:
     name: Sync Workflows
     runs-on: ubuntu-slim
+    if: github.repository_owner == 'adbc-drivers'
 
     permissions:
       contents: write
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           fetch-depth: 1
           persist-credentials: true # for git operations below
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b  # 7.2.0.
+
       - name: Re-generate workflows
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install git+https://github.com/adbc-drivers/dev.git
-          adbc-gen-workflow generate $(pwd)
+          echo "Generating workflows with adbc-gen-workflow..."
+          uvx --from git+https://github.com/adbc-drivers/dev.git adbc-gen-workflow generate $(pwd) || {
+            echo "ERROR: Failed to generate workflows"
+            exit 1
+          }
+
+          echo "Workflow generation completed successfully"
 
       - name: Create PR if there are any changes
         env:
@@ -66,19 +71,22 @@ jobs:
               exit 0
             fi
 
-            git config user.name "github-actions"
-            git config user.email "github-actions@github.com"
-            git checkout -b $BRANCH
-            git add .
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b "$BRANCH"
+            # Only add workflow files
+            git add .github/workflows/
             git commit -m "update generated workflows"
-            git push origin $BRANCH
+            git push origin "$BRANCH"
 
             gh pr create \
               --base main \
-              --head $BRANCH \
+              --head "$BRANCH" \
               --title "$PR_TITLE" \
-              --body "TODO" \
-              --dry-run
+              --body "" || {
+                echo "ERROR: Failed to create pull request"
+                exit 1
+              }
           else
             echo "No changes to commit. Skipping creating a PR."
           fi
